@@ -1,0 +1,11 @@
+- name: Delete namespace from source cluster
+  k8s:
+    kubeconfig: "{{ src_kubeconfig }}"
+    state : absent
+    definition: "{{ lookup('template', 'namespace.yml.j2' )}}"
+
+- name: Delete namespace from target cluster
+  k8s:
+    kubeconfig: "{{ target_kubeconfig }}"
+    state : absent
+    definition: "{{ lookup('template', 'namespace.yml.j2' )}}"

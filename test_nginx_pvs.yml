@@ -1,0 +1,25 @@
+- hosts: localhost
+  roles:
+    #- { role: nginx-pv, action: "deploy" }
+    #- { role: nginx-pv, action: "provision" }
+
+    - role: nginx-pv
+      action: "deploy"
+
+    - role: nginx-pv
+      action: "provision"
+
+    - role: migration
+      namespace: "nginx-example"
+      migration_plan_name: "nginx-migplan"
+
+    - role: nginx-pv
+      action: "verify"
+
+    - role: nginx-pv
+      action: "teardown"
+
+  vars_files:
+    - "{{ playbook_dir }}/config/global.yml"
+
+

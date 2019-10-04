@@ -1,0 +1,24 @@
+apiVersion: migration.openshift.io/v1alpha1
+kind: MigPlan
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: {{ migration_plan_name }}
+  namespace: {{ migration_namespace }}
+spec:
+
+  srcMigClusterRef:
+    name: {{ src_cluster_name }}
+    namespace: {{ migration_namespace }}
+
+  destMigClusterRef:
+    name: {{ target_cluster_name }}
+    namespace: {{ migration_namespace }}
+
+  migStorageRef:
+    name: {{ bucket_name }}
+    namespace: {{ migration_namespace }}
+
+  # [!] Change namespaces to adjust which OpenShift namespaces should be migrated from source to destination cluster
+  namespaces: 
+  - {{ namespace }}

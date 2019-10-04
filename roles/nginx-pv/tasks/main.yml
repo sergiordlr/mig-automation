@@ -1,0 +1,12 @@
+---
+- debug:
+  name: Executing action {{ action }}
+
+- import_tasks: deployment.yml
+  when: action=="deploy"
+- import_tasks: provision.yml
+  when: action=="provision"
+- import_tasks: verify-migration.yml
+  when: action=="verify"
+- import_tasks: teardown.yml
+  when: action=="teardown"

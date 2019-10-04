@@ -1,0 +1,3 @@
+---
+mig_velero_timeout: 120
+migration_namespace: openshift-migration

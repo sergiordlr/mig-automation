@@ -1,0 +1,23 @@
+ocp3_kubeconfig: "{{ playbook_dir }}/config/ocp3_kubeconfig"
+ocp3_bin: /path/to/ocp3/oc
+ocp3: "{{ ocp3_bin }} --kubeconfig {{ ocp3_kubeconfig }}"
+
+ocp4_kubeconfig: "{{ playbook_dir }}/config/ocp4_kubeconfig"
+ocp4_bin: /path/to/ocp4/oc
+ocp4: "{{ ocp4_bin }} --kubeconfig {{ ocp4_kubeconfig }}"
+
+# Source cluster configuration
+src_cluster_name: "ocp3"
+src_ocp: "{{ ocp3 }}"
+src_kubeconfig: "{{ ocp3_kubeconfig }}"
+
+# Target cluster configuration
+target_cluster_name: "host"
+target_ocp: "{{ ocp4 }}"
+target_kubeconfig: "{{ ocp4_kubeconfig }}"
+
+# Bucket configuration
+bucket_name: "bucket"
+
+# CAM configuration
+cam_kubeconfig: "{{ ocp4_kubeconfig }}"

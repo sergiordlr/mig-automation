@@ -1,0 +1,58 @@
+- name: Obtain route
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Route
+    namespace: "{{ namespace }}"
+    label_selectors: "app=nginx"
+  register: nginx_route
+
+- name: Force an error to log in the error.log file
+  uri:
+    url: http://{{ nginx_route.resources[0].spec.host }}
+    method: GET
+    status_code: 403
+
+- name: Upload an index html file
+  shell: "{{ src_ocp }} -n {{ namespace }} rsh $( {{src_ocp}} get pods -n {{ namespace }} -o jsonpath='{.items[0].metadata.name}') sh -c 'echo \"<h1>HELLO WORLD</h1>\" > /usr/share/nginx/html/index.html'"
+
+- name: Acces the html file
+  uri:
+    url: http://{{ nginx_route.resources[0].spec.host }}
+    method: GET
+    status_code: 200
+
+- name: Get /var/log/nginx/access.log file content
+  shell: "{{ src_ocp }} -n {{ namespace }} rsh $({{ src_ocp }} get pods -n {{ namespace }} -o jsonpath='{.items[0].metadata.name}') cat /var/log/nginx/access.log "
+  register: output
+
+- debug: msg={{ output.stdout_lines }}
+  name: /var/log/nginx/access.log file content
+
+
+- name: Fail if no 403 error present in nginx access.log file. There must be 1 error
+  fail:
+     msg: There should be one and only one 403 error in access.log file.
+  failed_when: 1 != ( output.stdout_lines | select('match', '.*403 153 "-" "ansible-httpget".*') | list | length )
+
+- name: Fail if no 200 code present in nginx access.log file. There must be 1 access
+  fail:
+     msg: There should be one and only one 200 code in access.log file.
+  failed_when: 1 != ( output.stdout_lines | select('match', '.*200 21 "-" \"ansible-httpget".*') | list | length )
+
+#- name: Fail if no forbidded error is found in error.log file
+#  shell: "{{ src_ocp }} -n {{ namespace }} rsh $({{ src_ocp }} get pods -n {{ namespace }} -o jsonpath='{.items[0].metadata.name}') cat /var/log/nginx/error.log "
+#  register: output
+
+
+- name: Get /var/log/nginx/error.log file content
+  shell: "{{ src_ocp }} -n {{ namespace }} rsh $({{ src_ocp }} get pods -n {{ namespace }} -o jsonpath='{.items[0].metadata.name}') cat /var/log/nginx/error.log "
+  register: output
+
+- debug: msg={{ output.stdout_lines }}
+  name: /var/log/nginx/error.log file content
+
+
+- name: Fail if no forbidden error present in nginx access.log file. There must be 1 error
+  fail:
+     msg: There should be one and only one forbidden error in access.log file.
+  failed_when: 1 != ( output.stdout_lines | select('match', '.*directory index of "/usr/share/nginx/html/" is forbidden.*') | list | length )

@@ -1,0 +1,43 @@
+
+#- name: Copying the templated jinja2 files
+#  template: src={{item}} dest={{role_path}}/files/{{ item | regex_replace(role_path+'/templates','') | regex_replace('\.j2', '') }}
+#  with_items: "{{ lookup('pipe','find {{role_path}}/templates -type f').split('\n') }}"
+
+- name: Create namespace
+  k8s:
+    kubeconfig: "{{ src_kubeconfig }}"
+    state : present
+    definition: "{{ lookup('template', 'namespace.yml.j2' )}}"
+
+- name: Deploy mysql sample
+  k8s:
+    kubeconfig: "{{ src_kubeconfig }}"
+    state : present
+    definition: "{{ lookup('template', 'deployment.yml.j2' )}}"
+
+- name: Check nodes status
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Pod
+    namespace: "{{ namespace }}"
+    label_selectors: "app=nginx"
+  register: pod
+  until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  retries: 30
+
+
+- name: Obtain route
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Route
+    namespace: "{{ namespace }}"
+    label_selectors: "app=nginx"
+  register: nginx_route
+
+
+#- name: Check if deployed
+#  include: check.yml
+#
+#- name: Load sample data
+#  include: load_data.yml
+

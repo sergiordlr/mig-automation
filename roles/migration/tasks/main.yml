@@ -1,0 +1,42 @@
+- name: Generate migration name
+  set_fact:
+    migration_name: "{{ migration_plan_name }}-{{ (100000 | random) }}"
+
+- debug: msg={{ migration_name }}
+
+- name: Create migration plan
+  k8s:
+    kubeconfig: "{{ cam_kubeconfig }}"
+    state: present
+    definition: "{{ lookup('template', 'mig-plan.yml.j2') }}"
+
+- name: Check migration plan for PVs
+  k8s_facts:
+    kubeconfig: "{{ cam_kubeconfig }}"
+    kind: MigPlan
+    api_version: v1alpha1
+    namespace: "{{ migration_namespace }}"
+    name: "{{ migration_plan_name }}"
+  register: mig_plan
+  until: mig_plan.resources[0].get("spec", {}).get("persistentVolumes", {})
+  retries: 30
+  delay: 5
+
+- name: Execute migration
+  k8s:
+    kubeconfig: "{{ cam_kubeconfig }}"
+    state: present
+    definition: "{{ lookup('template', 'mig-migration.yml.j2') }}"
+
+- name: "Check if migration {{ migration_name }} is completed"
+  k8s_facts:
+    kubeconfig: "{{ cam_kubeconfig }}"
+    kind: MigMigration
+    api_version: v1alpha1
+    namespace: "{{ migration_namespace }}"
+    name: "{{ migration_name }}"
+  register: mig_phase
+  until: mig_phase.resources[0].get("status", {}).get("phase", "") in 'Completed'
+  retries: 60
+  delay: 10
+
