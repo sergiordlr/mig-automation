@@ -7,14 +7,14 @@ items:
       app: nginx
       template: mysql-persistent-template
     name: nginx-logs
-    namespace: nginx-example
+    namespace: {{ namespace }}
   spec:
     accessModes:
     - ReadWriteOnce
     resources:
       requests:
         storage: 50Mi
-    storageClassName: glusterfs-storage
+    #storageClassName: glusterfs-storage
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -22,21 +22,21 @@ items:
       app: nginx
       template: mysql-persistent-template
     name: nginx-html
-    namespace: nginx-example
+    namespace: {{ namespace }}
   spec:
     accessModes:
     - ReadWriteOnce
     resources:
       requests:
         storage: 50Mi
-    storageClassName: glusterfs-storage
+    #storageClassName: glusterfs-storage
 - apiVersion: apps/v1beta1
   kind: Deployment
   metadata:
     labels:
       template: mysql-persistent-template
     name: nginx-deployment
-    namespace: nginx-example
+    namespace: {{ namespace }}
   spec:
     replicas: 1
     template:
@@ -70,7 +70,7 @@ items:
       app: nginx
       template: mysql-persistent-template
     name: my-nginx
-    namespace: nginx-example
+    namespace: {{ namespace }}
   spec:
     ports:
     - port: 8081
@@ -86,7 +86,7 @@ items:
       service: my-nginx
       template: mysql-persistent-template
     name: my-nginx
-    namespace: nginx-example
+    namespace: {{ namespace }}
   spec:
     port:
       targetPort: 8081
