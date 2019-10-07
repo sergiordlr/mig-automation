@@ -25,6 +25,8 @@
 - name: Get /var/log/nginx/access.log file content
   shell: "{{ target_ocp }} -n {{ namespace }} rsh $({{ target_ocp }} get pods -n {{ namespace }} -o jsonpath='{.items[0].metadata.name}') cat /var/log/nginx/access.log "
   register: output
+  until: output.rc == 0 and output.stdout != ''
+  retries: 5
 
 - debug: msg={{ output.stdout_lines }}
   name: /var/log/nginx/access.log file content
@@ -42,6 +44,8 @@
 - name: Get /var/log/nginx/error.log file content
   shell: "{{ target_ocp }} -n {{ namespace }} rsh $({{ target_ocp }} get pods -n {{ namespace }} -o jsonpath='{.items[0].metadata.name}') cat /var/log/nginx/error.log "
   register: output
+  until: output.rc == 0 and output.stdout != ''
+  retries: 5
 
 - debug: msg={{ output.stdout_lines }}
   name: /var/log/nginx/error.log file content

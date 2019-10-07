@@ -6,7 +6,7 @@
        chdir: "{{ playbook_dir }}/tests/"
      ignore_errors: true
 
-   - name: "test_nginx_pv"
+   - name: "test_init_containers"
      shell: ansible-playbook test-init-containers.yml
      args:
        chdir: "{{ playbook_dir }}/tests/"
