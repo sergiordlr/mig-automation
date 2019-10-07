@@ -3,23 +3,23 @@
     #- { role: nginx-pv, action: "deploy" }
     #- { role: nginx-pv, action: "provision" }
 
-    - role: nginx-pv
+    - role: init-containers
       action: "deploy"
 
-    - role: nginx-pv
+    - role: init-containers
       action: "provision"
 
     - role: migration
-      namespace: "nginx-example"
-      migration_plan_name: "nginx-migplan"
+      namespace: "init-containers-test"
+      migration_plan_name: "init-containers-plan"
 
-    - role: nginx-pv
+    - role: init-containers
       action: "verify"
 
-    - role: nginx-pv
+    - role: init-containers
       action: "teardown"
 
   vars_files:
-    - "{{ playbook_dir }}/config/global.yml"
+    - "{{ playbook_dir }}/../config/global.yml"
 
 

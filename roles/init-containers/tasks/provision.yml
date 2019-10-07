@@ -1,0 +1,2 @@
+- name: "Provision not needed"
+  debug: msg="No need to provision anything. Deployment is enough."

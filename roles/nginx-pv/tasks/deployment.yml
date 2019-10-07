@@ -9,7 +9,7 @@
     state : present
     definition: "{{ lookup('template', 'namespace.yml.j2' )}}"
 
-- name: Deploy mysql sample
+- name: Deploy nginx nodes
   k8s:
     kubeconfig: "{{ src_kubeconfig }}"
     state : present

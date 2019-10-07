@@ -1,0 +1,13 @@
+- hosts: localhost
+  tasks:
+   - name: "test_nginx_pv"
+     shell: ansible-playbook test-nginx-pvs.yml 
+     args:
+       chdir: "{{ playbook_dir }}/tests/"
+     ignore_errors: true
+
+   - name: "test_nginx_pv"
+     shell: ansible-playbook test-init-containers.yml
+     args:
+       chdir: "{{ playbook_dir }}/tests/"
+     ignore_errors: true

@@ -10,7 +10,20 @@
     state: present
     definition: "{{ lookup('template', 'mig-plan.yml.j2') }}"
 
-- name: Check migration plan for PVs
+#- name: Check migration plan for PVs
+#  k8s_facts:
+#    kubeconfig: "{{ cam_kubeconfig }}"
+#    kind: MigPlan
+#    api_version: v1alpha1
+#    namespace: "{{ migration_namespace }}"
+#    name: "{{ migration_plan_name }}"
+#  register: mig_plan
+#  until: mig_plan.resources[0].get("spec", {}).get("persistentVolumes", {})
+#  retries: 30
+#  delay: 5
+
+
+- name: Check if migration plan is ready
   k8s_facts:
     kubeconfig: "{{ cam_kubeconfig }}"
     kind: MigPlan
@@ -18,7 +31,7 @@
     namespace: "{{ migration_namespace }}"
     name: "{{ migration_plan_name }}"
   register: mig_plan
-  until: mig_plan.resources[0].get("spec", {}).get("persistentVolumes", {})
+  until: (mig_plan | json_query('resources[0].status.conditions[?type==`Ready`].status') ) == ["True"]
   retries: 30
   delay: 5
 

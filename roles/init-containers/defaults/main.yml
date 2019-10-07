@@ -1,0 +1,10 @@
+---
+namespace: init-containers-test
+replicas: 1
+int_app_name: internal-nginx
+ext_app_name: external-nginx
+
+internal_image_name: internal-alpine
+internal_image_tag: int
+
+external_image_name: docker.io/alpine

@@ -1,0 +1,88 @@
+- name: Create namespace
+  k8s:
+    kubeconfig: "{{ src_kubeconfig }}"
+    state : present
+    definition: "{{ lookup('template', 'namespace.yml.j2' )}}"
+
+
+- name: Import image to imagestream
+  shell: "{{ src_ocp }} -n {{ namespace }}  import-image {{ internal_image_name }}:{{ internal_image_tag }} --from {{ external_image_name }} --confirm"
+
+- name: Deploy pods using external image
+  k8s:
+    kubeconfig: "{{ src_kubeconfig }}"
+    state : present
+    namespace : "{{ namespace }}"
+    definition: "{{ lookup('template', 'deployment.yml.j2' )}}"
+  vars:
+    replicas: 1
+    app_name: "{{ ext_app_name }}"
+    init_image: docker.io/alpine
+
+
+- name: Deploy pods using internal image
+  k8s:
+    kubeconfig: "{{ src_kubeconfig }}"
+    state : present
+    namespace : "{{ namespace }}"
+    definition: "{{ lookup('template', 'deployment.yml.j2' )}}"
+  vars:
+    replicas: 1
+    app_name: "{{ int_app_name }}"
+    init_image: "docker-registry.default.svc:5000/{{ namespace }}/{{ internal_image_name }}:{{ internal_image_tag }}"
+
+- name: Check external image nodes status
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Pod
+    namespace: "{{ namespace }}"
+    label_selectors: "app={{ ext_app_name }}"
+  register: pod
+  #until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  until: pod | json_query('resources[*].status.containerStatuses[*].ready') | flatten |difference( [true] ) | length  == 0
+  retries: 30
+
+- name: Check internal image nodes status
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Pod
+    namespace: "{{ namespace }}"
+    label_selectors: "app={{ int_app_name }}"
+  register: pod
+  #until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  until: pod | json_query('resources[*].status.containerStatuses[*].ready') | flatten |difference( [true] ) | length  == 0
+  retries: 30
+
+- name: Obtain  internal route
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Route
+    namespace: "{{ namespace }}"
+    label_selectors: "app={{ int_app_name }}"
+  register: int_route
+
+- debug: msg={{int_route}}
+
+- name: Obtain  external route
+  k8s_facts:
+    kubeconfig: "{{ src_kubeconfig }}"
+    kind: Route
+    namespace: "{{ namespace }}"
+    label_selectors: "app={{ ext_app_name }}"
+  register: ext_route
+
+- name: Acces the internal route content
+  uri:
+    url: http://{{ int_route.resources[0].spec.host }}
+    method: GET
+    return_content: yes
+  register: this
+  failed_when: "'<h1>HELLO WORLD</h1>' not in this.content"
+
+- name: Acces the external route content
+  uri:
+    url: http://{{ ext_route.resources[0].spec.host }}
+    method: GET
+    return_content: yes
+  register: this
+  failed_when: "'<h1>HELLO WORLD</h1>' not in this.content"
